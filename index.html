@@ -1,560 +1,164 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GeoDash — Highscore Run</title>
-<meta name="description" content="Geometry-Dash-style Highscore Game — Click / Touch to jump. LocalHighscore. GitHub Pages ready.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DashCore — Highscore Run</title>
 <style>
-  :root{
-    --bg:#0f1724;
-    --card:#0b1220;
-    --accent:#06b6d4;
-    --muted:#9aa8b2;
-    --danger:#ef4444;
-    --glass: rgba(255,255,255,0.04);
-    --neon: 0 10px 30px rgba(6,182,212,0.12);
-    --radius:14px;
-  }
-  *{box-sizing:border-box;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071021 0%,var(--bg) 100%);color:#e6f0f2}
-  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
-  .card{width:100%;max-width:980px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:18px;padding:20px;box-shadow:var(--neon);display:grid;grid-template-columns: 1fr 380px;gap:18px}
-  @media(max-width:900px){.card{grid-template-columns:1fr;}}
-  header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-  .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700;color:#02111a;font-size:20px}
-  h1{margin:0;font-size:20px}
-  p.lead{margin:6px 0 0 0;color:var(--muted);font-size:13px}
-
-  /* Game area */
-  .game-area{background:linear-gradient(180deg,#081226 0%, #06111b 100%);border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
-  #gameCanvas{width:100%;height:420px;border-radius:8px;background:
-    repeating-linear-gradient(0deg, rgba(255,255,255,0.01) 0 1px, transparent 1px 60px);
-    box-shadow: inset 0 4px 30px rgba(0,0,0,0.5);
-  }
-  @media(max-width:600px){#gameCanvas{height:300px}}
-
-  /* Sidebar */
-  .sidebar{padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));display:flex;flex-direction:column;gap:12px}
-  .panel{background:var(--glass);padding:12px;border-radius:12px}
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:linear-gradient(90deg,var(--accent),#7c3aed);color:#02111a;font-weight:700;border:0;cursor:pointer;box-shadow:0 6px 18px rgba(7,22,34,0.6)}
-  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.05);color:var(--accent);font-weight:600}
-  .stat{display:flex;justify-content:space-between;align-items:center;font-weight:700}
-  small.muted{color:var(--muted);font-weight:600}
-
-  /* overlays */
-  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .menu{pointer-events:auto;background:linear-gradient(180deg, rgba(3,7,14,0.8), rgba(3,7,14,0.6));padding:22px;border-radius:12px;text-align:center;width:min(88%,520px)}
-  .menu h2{margin:0 0 6px 0}
-  .menu p{margin:0 0 16px 0;color:var(--muted)}
-  .menu .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-  .small{font-size:13px;color:var(--muted)}
-
-  footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--muted);font-size:13px}
-  .controls{display:flex;gap:8px;align-items:center}
-  .pill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:999px;font-weight:700}
-  .level-badge{background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:8px;font-weight:700;color:var(--accent)}
+:root{
+  --bg:#0f1724; --accent:#06b6d4; --muted:#9aa8b2; --glass: rgba(255,255,255,0.04);
+}
+body{margin:0;font-family:sans-serif;background:var(--bg);color:#e6f0f2;overflow:hidden;}
+.wrap{display:flex;justify-content:center;align-items:center;height:100vh;position:relative;}
+canvas{background:#081726;border-radius:8px;}
+.overlay{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none;}
+.menu{pointer-events:auto;background:rgba(0,0,0,0.7);padding:20px;border-radius:12px;text-align:center;}
+button{padding:10px 16px;margin:4px;border:none;border-radius:8px;cursor:pointer;font-weight:700;}
+button.start{background:var(--accent);}
+button.secondary{background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.1);}
+.stats{position:absolute;top:12px;left:12px;font-weight:700;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="card" role="application" aria-label="GeoDash Game Card">
-    <div>
-      <header>
-        <div class="logo">GD</div>
-        <div>
-          <h1>GeoDash — Highscore Run</h1>
-          <p class="lead">Click / Tap / Space zum Springen — pack das Level und schlag deinen Bestscore.</p>
-        </div>
-      </header>
-
-      <div class="game-area" id="gameArea">
-        <canvas id="gameCanvas" width="900" height="420"></canvas>
-
-        <!-- Overlay menu / end screens -->
-        <div id="overlay" class="overlay" aria-hidden="false"></div>
-      </div>
-
-      <footer>
-        <div class="controls">
-          <div class="pill">Space / Click / Touch</div>
-          <div class="level-badge" id="levelBadge">Level 1 — Fixed Run</div>
-        </div>
-        <div class="small">Made by Nico — GitHub Pages ready</div>
-      </footer>
-    </div>
-
-    <aside class="sidebar" aria-label="Game Sidebar">
-      <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-size:13px;color:var(--muted)">Current Score</div>
-            <div style="font-size:20px;font-weight:800" id="score">0</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:13px;color:var(--muted)">Best</div>
-            <div style="font-size:20px;font-weight:800;color:var(--accent)" id="bestScore">0</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="small">Level</div>
-            <div style="font-weight:800">1 — Tutorial Run</div>
-            <div class="small" style="margin-top:6px">Distance to finish: <span id="distRemaining">--</span>m</div>
-          </div>
-          <div style="text-align:right">
-            <div class="small">Attempts</div>
-            <div id="attempts" style="font-weight:800">0</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <button class="btn" id="btnStart">Start</button>
-        <button class="btn secondary" id="btnMute">Mute</button>
-      </div>
-
-      <div class="panel small muted" style="font-size:13px">
-        Tip: Try the game on mobile — physics are tuned for taps. This repo is a single-file project ready for GitHub Pages.
-      </div>
-    </aside>
-  </div>
+  <canvas id="gameCanvas" width="900" height="420"></canvas>
+  <div id="overlay" class="overlay"></div>
+  <div class="stats">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
 </div>
-
 <script>
-/* ----------------------------
-   GeoDash — Single-file Game
-   - Fixed Level
-   - Click/Touch/Space to jump
-   - LocalStorage highscore
-   - WebAudio sounds
------------------------------*/
-
 (() => {
-  // Canvas + context
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d', {alpha:false});
-  const DPR = window.devicePixelRatio || 1;
-  function resizeCanvas() {
-    // keep internal resolution high while CSS scales
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.max(600, Math.floor(rect.width * DPR));
-    canvas.height = Math.max(300, Math.floor(rect.height * DPR));
-    ctx.setTransform(DPR,0,0,DPR,0,0);
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const scoreEl = document.getElementById('score');
+const bestEl = document.getElementById('best');
+let best = parseInt(localStorage.getItem('dashcore_best')||'0',10);
+bestEl.textContent = best;
+
+const G=1800, JUMP_V=-440, PLAYER_W=46, PLAYER_H=36, GROUND_H=86;
+let player={x:120,y:0,vy:0,onGround:true,w:PLAYER_W,h:PLAYER_H};
+let obstacles=[], camX=0, running=false, gameOver=false, score=0;
+let particles=[];
+
+const baseObstacles=[{x:600,w:48,h:68},{x:900,w:48,h:120},{x:1150,w:96,h:92},{x:1550,w:64,h:160},{x:2000,w:72,h:72},{x:2450,w:48,h:120},{x:2800,w:120,h:96},{x:3200,w:48,h:150},{x:3650,w:96,h:88},{x:4050,w:160,h:120}];
+const finishX=4800;
+
+function buildLevel(){
+  const scale=canvas.width/900;
+  obstacles=baseObstacles.map(o=>({x:o.x*scale,w:Math.max(20,o.w*scale),h:Math.max(20,o.h*scale)}));
+}
+buildLevel();
+
+function resetGame(){
+  player.y=canvas.height-GROUND_H-player.h; player.vy=0; player.onGround=true;
+  camX=0; score=0; scoreEl.textContent=score; gameOver=false;
+  particles=[];
+}
+function startGame(){running=true; overlay.innerHTML='';}
+function jump(){if(!running){startGame(); return;} if(player.onGround){player.vy=JUMP_V;player.onGround=false;spawnJumpParticles();}}
+
+canvas.addEventListener('pointerdown',jump);
+window.addEventListener('keydown',e=>{if(e.code==='Space') jump();});
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by;}
+
+function spawnJumpParticles(){
+  for(let i=0;i<10;i++){
+    particles.push({x:player.x+player.w/2, y:player.y+player.h, vx:(Math.random()-0.5)*120, vy:-Math.random()*160, life:0.5});
   }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
-  // UI elements
-  const overlay = document.getElementById('overlay');
-  const scoreEl = document.getElementById('score');
-  const bestEl = document.getElementById('bestScore');
-  const distEl = document.getElementById('distRemaining');
-  const attemptsEl = document.getElementById('attempts');
-  const btnStart = document.getElementById('btnStart');
-  const btnMute = document.getElementById('btnMute');
-
-  // Settings / state
-  const STORAGE_KEY = 'geodash_best_v1';
-  const STORAGE_ATTEMPTS = 'geodash_attempts_v1';
-  let best = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
-  let attempts = parseInt(localStorage.getItem(STORAGE_ATTEMPTS) || '0', 10);
-  bestEl.textContent = best;
-  attemptsEl.textContent = attempts;
-
-  let muted = false;
-
-  // Audio (simple)
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playTone(freq, type='sine', time=0.05, gain=0.12) {
-    if (muted) return;
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.type = type;
-    o.frequency.value = freq;
-    g.gain.value = gain;
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start();
-    o.stop(audioCtx.currentTime + time);
+}
+function spawnHitParticles(x,y){
+  for(let i=0;i<20;i++){
+    particles.push({x:x, y:y, vx:(Math.random()-0.5)*200, vy:-Math.random()*200, life:0.7});
   }
-  function playJump(){ playTone(520,'sawtooth',0.08,0.08); }
-  function playHit(){ playTone(120,'sine',0.18,0.16); }
-  function playFinish(){ playTone(980,'triangle',0.24,0.14); setTimeout(()=>playTone(740,'sine',0.18,0.12),120) }
+}
 
-  btnMute.addEventListener('click', () => {
-    muted = !muted;
-    btnMute.textContent = muted ? 'Unmute' : 'Mute';
+function updateParticles(dt){
+  particles.forEach(p=>{
+    p.x += p.vx*dt;
+    p.y += p.vy*dt;
+    p.vy += G*dt*0.3;
+    p.life -= dt;
   });
+  particles = particles.filter(p=>p.life>0);
+}
 
-  // Game constants
-  const G = 2200; // gravity px/s^2 (scaled)
-  const JUMP_V = -540; // px/s initial jump velocity
-  const PLAYER_W = 46;
-  const PLAYER_H = 36;
-  const GROUND_H = 86;
-
-  // Game variables
-  let lastT = 0;
-  let running = false;
-  let gameOver = false;
-  let score = 0;
-  let distRemaining = 0;
-  let attemptCount = attempts;
-
-  // Player
-  const player = {
-    x: 120,
-    y: 0, vy: 0, w: PLAYER_W, h: PLAYER_H, onGround: false
-  };
-
-  // Level definition (fixed)
-  // Units: pixels on canvas at default CSS size. We will scale to canvas width.
-  // Level is an array of obstacles {x, w, h, gapTop?}
-  const baseLevelWidth = 4800; // world width px
-  // obstacles placed along world
-  const baseObstacles = [
-    {x: 600, w: 48, h: 68},
-    {x: 900, w: 48, h: 120},
-    {x: 1150, w: 96, h: 92},
-    {x: 1550, w: 64, h: 160},
-    {x: 2000, w: 72, h: 72},
-    {x: 2450, w: 48, h: 120},
-    {x: 2800, w: 120, h: 96},
-    {x: 3200, w: 48, h: 150},
-    {x: 3650, w: 96, h: 88},
-    {x: 4050, w: 160, h: 120}
-  ];
-  // Finish line near end
-  const finishX = baseLevelWidth - 200;
-
-  // Camera / world
-  let camX = 0;
-  let worldW = baseLevelWidth;
-  let obstacles = [];
-
-  // scale level to actual canvas width
-  function buildLevel() {
-    // scaling so that baseLevelWidth becomes 3x canvas width (feel)
-    const scale = (canvas.width / DPR) / 900; // base design width 900
-    worldW = Math.floor(baseLevelWidth * scale);
-    obstacles = baseObstacles.map(o => {
-      return {
-        x: Math.floor(o.x * scale),
-        w: Math.max(20, Math.floor(o.w * scale)),
-        h: Math.max(20, Math.floor(o.h * scale))
-      }
-    });
+function update(dt){
+  if(!running) return;
+  player.vy += G*dt;
+  player.y += player.vy*dt;
+  if(player.y >= canvas.height-GROUND_H-player.h){player.y = canvas.height-GROUND_H-player.h;player.vy=0;player.onGround=true;}
+  const speed=320; camX += speed*dt; score=Math.floor(camX/6); scoreEl.textContent=score;
+  for(const o of obstacles){
+    const ox=o.x-camX+player.x*0.2;
+    const oy=canvas.height-GROUND_H-o.h;
+    if(aabb(player.x,player.y,player.w,player.h,ox,oy,o.w,o.h)){running=false;gameOver=true;spawnHitParticles(player.x+player.w/2,player.y+player.h/2);showGameOver(false);}
   }
+  if(camX >= finishX*(canvas.width/900)){running=false;gameOver=true; if(score>best){best=score;localStorage.setItem('dashcore_best',best); bestEl.textContent=best;} showGameOver(true);}
+  updateParticles(dt);
+}
 
-  // Reset
-  function resetGame() {
-    lastT = performance.now();
-    running = false;
-    gameOver = false;
-    score = 0;
-    camX = 0;
-    player.y = (canvas.height/DPR) - GROUND_H - player.h;
-    player.vy = 0;
-    player.onGround = true;
-    distRemaining = Math.max(0, Math.round((finishX * ( (canvas.width/DPR) / 900 )) - camX));
-    scoreEl.textContent = score;
-    distEl.textContent = (distRemaining/100).toFixed(1); // meters-ish
+function draw(){
+  ctx.fillStyle='#071226'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  const groundY=canvas.height-GROUND_H;
+  // Hintergrund-Parallax
+  for(let i=0;i<8;i++){
+    const px=((i*420)-(camX*0.15))%(canvas.width+200)-100;
+    ctx.fillStyle='rgba(6,182,212,0.03)';
+    ctx.fillRect(px,groundY-120-(i%3)*18,200,6);
   }
+  ctx.fillStyle='#081724'; ctx.fillRect(0,groundY,canvas.width,GROUND_H);
 
-  function startRun() {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    running = true;
-    gameOver = false;
-    attemptCount += 1;
-    attemptsEl.textContent = attemptCount;
-    localStorage.setItem(STORAGE_ATTEMPTS, attemptCount);
-    overlay.innerHTML = '';
-  }
-
-  // Input handles
-  function doJump() {
-    if (gameOver) return;
-    if (!running) { startRun(); playJump(); return; }
-    if (player.onGround) {
-      player.vy = JUMP_V;
-      player.onGround = false;
-      playJump();
+  // Hindernisse mit Neon-Effekt
+  for(const o of obstacles){
+    const ox=o.x-camX+player.x*0.2;
+    const oy=groundY-o.h;
+    if(ox>-200 && ox<canvas.width+200){
+      // Glow
+      ctx.shadowBlur=12; ctx.shadowColor='#06b6d4';
+      ctx.fillStyle='#06b6d4'; ctx.fillRect(ox,oy,o.w,o.h);
+      ctx.shadowBlur=0;
     }
   }
-  // Click / touch / space
-  canvas.addEventListener('pointerdown', (e)=> { e.preventDefault(); doJump(); });
-  window.addEventListener('keydown', (e)=> {
-    if (e.code === 'Space') { e.preventDefault(); doJump(); }
+
+  // Spieler
+  ctx.fillStyle='#06b6d4'; ctx.fillRect(player.x,player.y,player.w,player.h);
+
+  // Partikel
+  particles.forEach(p=>{
+    ctx.fillStyle='rgba(124,58,237,'+p.life*2+')';
+    ctx.fillRect(p.x,p.y,4,4);
   });
+}
 
-  // simple AABB collision
-  function aabbCollision(ax,ay,aw,ah,bx,by,bw,bh) {
-    return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
-  }
-
-  // Game loop
-  function update(dt) {
-    if (!running) return;
-
-    // physics
-    player.vy += G * dt;
-    player.y += player.vy * dt;
-
-    // ground collision
-    const groundY = (canvas.height / DPR) - GROUND_H - player.h;
-    if (player.y >= groundY) {
-      player.y = groundY;
-      player.vy = 0;
-      player.onGround = true;
-    }
-
-    // camera moves forward at fixed speed
-    const baseSpeed = 420; // px/s
-    const speed = baseSpeed + Math.min(280, score*2.5); // gradually increase
-    camX += speed * dt;
-
-    // score increases with cam movement
-    score = Math.max(0, Math.floor(camX / 6));
-    scoreEl.textContent = score;
-
-    // update remaining distance (world finish scaled)
-    const scaledFinish = finishX * ((canvas.width/DPR)/900);
-    distRemaining = Math.max(0, Math.round((scaledFinish - camX)));
-    distEl.textContent = (distRemaining/100).toFixed(1);
-
-    // collision test with obstacles
-    for (const o of obstacles) {
-      const ox = o.x - camX + player.x*0.2; // parallax offset
-      const oy = (canvas.height/DPR) - GROUND_H - o.h;
-      // player box
-      if (aabbCollision(player.x, player.y, player.w, player.h, ox, oy, o.w, o.h)) {
-        // hit
-        running = false;
-        gameOver = true;
-        playHit();
-        showGameOver(false);
-      }
-    }
-
-    // finish
-    if (camX >= scaledFinish) {
-      running = false;
-      gameOver = true;
-      playFinish();
-      showGameOver(true);
-      // update best
-      if (score > best) {
-        best = score;
-        localStorage.setItem(STORAGE_KEY, String(best));
-        bestEl.textContent = best;
-      }
-    }
-  }
-
-  function draw() {
-    // clear bg
-    ctx.fillStyle = '#071226';
-    ctx.fillRect(0,0,canvas.width/DPR,canvas.height/DPR);
-
-    // decorative gradient ground
-    const ch = canvas.height/DPR;
-    const groundTop = ch - GROUND_H;
-    // sky stripes
-    const grad = ctx.createLinearGradient(0,0,0,ch);
-    grad.addColorStop(0,'#071226');
-    grad.addColorStop(1,'#041019');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0,0,canvas.width/DPR,groundTop);
-
-    // draw ground
-    ctx.fillStyle = '#081724';
-    ctx.fillRect(0,groundTop,canvas.width/DPR,GROUND_H);
-
-    // parallax background shapes
-    ctx.fillStyle = 'rgba(6,182,212,0.03)';
-    for (let i=0;i<8;i++){
-      const px = ((i*420) - (camX*0.15)) % (canvas.width/DPR + 200) - 100;
-      ctx.fillRect(px, groundTop - 120 - (i%3)*18, 200, 6);
-    }
-
-    // draw finish line
-    const scaledFinish = finishX * ((canvas.width/DPR)/900);
-    const finishScreenX = scaledFinish - camX;
-    if (finishScreenX < canvas.width/DPR + 200) {
-      ctx.fillStyle = '#7c3aed';
-      ctx.fillRect(finishScreenX, groundTop - 160, 8, 160);
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(finishScreenX+12, groundTop - 8, 64, 8);
-    }
-
-    // obstacles
-    for (const o of obstacles) {
-      const ox = o.x - camX + player.x*0.2;
-      const oy = groundTop - o.h;
-      if (ox > -200 && ox < canvas.width/DPR + 200) {
-        // shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.fillRect(ox+8, oy+8, o.w, o.h);
-        // block
-        ctx.fillStyle = '#e6f0f2';
-        roundRect(ctx, ox, oy, o.w, o.h, 8);
-        // accent stripe
-        ctx.fillStyle = 'rgba(124,58,237,0.14)';
-        ctx.fillRect(ox, oy, o.w, Math.min(16,o.h));
-      }
-    }
-
-    // player
-    ctx.save();
-    // subtle bob when running
-    const bob = (Math.sin(camX*0.02) * 2);
-    ctx.translate(0, bob);
-    // shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(player.x+6, player.y + player.h + 6, player.w-8, 8);
-    // body
-    ctx.fillStyle = '#06b6d4';
-    roundRect(ctx, player.x, player.y, player.w, player.h, 6);
-    // eye
-    ctx.fillStyle = '#02111a';
-    ctx.fillRect(player.x + player.w - 14, player.y + 10, 6, 6);
-    ctx.restore();
-  }
-
-  // rounded rect helper
-  function roundRect(ctx,x,y,w,h,r){
-    const radius = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+radius,y);
-    ctx.arcTo(x+w,y,x+w,y+h,radius);
-    ctx.arcTo(x+w,y+h,x,y+h,radius);
-    ctx.arcTo(x,y+h,x,y,radius);
-    ctx.arcTo(x,y,x+w,y,radius);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // requestAnimationFrame loop
-  function loop(t) {
-    const now = t || performance.now();
-    const dt = Math.min(0.033, (now - lastT) / 1000); // clamp dt
-    lastT = now;
-    update(dt);
-    draw();
-    requestAnimationFrame(loop);
-  }
-
-  // overlays UI (menu, game over)
-  function showMenu() {
-    overlay.innerHTML = '';
-    const menu = document.createElement('div');
-    menu.className = 'menu';
-    menu.innerHTML = `
-      <h2>GeoDash — Level 1</h2>
-      <p>Fixed run. Klick / Tippe oder drücke <strong>Space</strong>, um zu springen. Schaffst du es bis zur Ziellinie?</p>
-      <div class="row">
-        <button id="startBtn" class="btn">Start Run</button>
-        <button id="tutorialBtn" class="btn secondary">How to Play</button>
-      </div>
-      <div style="margin-top:12px;color:var(--muted)">Best: <strong>${best}</strong></div>
-    `;
-    overlay.appendChild(menu);
-    overlay.style.pointerEvents = 'auto';
-
-    document.getElementById('startBtn').addEventListener('click',()=>{
-      resetGame(); startRun();
-      overlay.innerHTML = '';
-    });
-    document.getElementById('tutorialBtn').addEventListener('click',()=> {
-      showInfo();
-    });
-  }
-
-  function showInfo() {
-    overlay.innerHTML = '';
-    const menu = document.createElement('div');
-    menu.className = 'menu';
-    menu.innerHTML = `
-      <h2>How to Play</h2>
-      <p class="small">Click / Tap / Space zum Springen. Vermeide Hindernisse. Ziel: Erreiche die Ziellinie ohne zu treffen.</p>
-      <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">
-        <button id="okBtn" class="btn">Got it</button>
-        <button id="backBtn" class="btn secondary">Back</button>
-      </div>
-    `;
-    overlay.appendChild(menu);
-    document.getElementById('okBtn').addEventListener('click', ()=> { overlay.innerHTML=''; });
-    document.getElementById('backBtn').addEventListener('click', ()=> { showMenu(); });
-  }
-
-  function showGameOver(finished) {
-    overlay.innerHTML = '';
-    overlay.style.pointerEvents = 'auto';
-    const menu = document.createElement('div');
-    menu.className = 'menu';
-    if (finished) {
-      menu.innerHTML = `
-        <h2>Finish!</h2>
-        <p>Nice run — du hast das Level beendet.</p>
-        <div style="margin:10px 0;font-weight:800;font-size:20px">Score: ${score}</div>
-        <div style="margin-bottom:12px;color:var(--muted)">Best: <strong>${best}</strong></div>
-        <div class="row">
-          <button id="replay" class="btn">Play Again</button>
-          <button id="menu" class="btn secondary">Main Menu</button>
-        </div>
-      `;
-    } else {
-      // update best if beaten
-      if (score > best) { best = score; localStorage.setItem(STORAGE_KEY, String(best)); bestEl.textContent = best; }
-      menu.innerHTML = `
-        <h2>Game Over</h2>
-        <p>Ouch — du bist getroffen worden.</p>
-        <div style="margin:10px 0;font-weight:800;font-size:20px">Score: ${score}</div>
-        <div style="margin-bottom:12px;color:var(--muted)">Best: <strong>${best}</strong></div>
-        <div class="row">
-          <button id="replay" class="btn">Try Again</button>
-          <button id="menu" class="btn secondary">Main Menu</button>
-        </div>
-      `;
-    }
-    overlay.appendChild(menu);
-
-    document.getElementById('replay').addEventListener('click', ()=> {
-      resetGame();
-      startRun();
-    });
-    document.getElementById('menu').addEventListener('click', ()=> {
-      resetGame();
-      showMenu();
-    });
-  }
-
-  // start button binding
-  btnStart.addEventListener('click', ()=> {
-    resetGame();
-    startRun();
-    overlay.innerHTML = '';
-  });
-
-  // initial build
-  buildLevel();
-  resetGame();
-  showMenu();
+let lastT=0;
+function loop(t){
+  const now=t||performance.now();
+  const dt=Math.min(0.033,(now-lastT)/1000);
+  lastT=now;
+  update(dt);
+  draw();
   requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
 
-  // rebuild on resize to re-scale obstacles
-  let resizeTimeout;
-  window.addEventListener('resize', ()=> {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(()=> { buildLevel(); resetGame(); }, 160);
-  });
+function showMenu(){
+  overlay.innerHTML='<div class="menu"><h2>DashCore — Level 1</h2><p>Easy Mode aktiviert</p><button class="start" id="startBtn">Start Run</button></div>';
+  overlay.style.pointerEvents='auto';
+  document.getElementById('startBtn').addEventListener('click',()=>{resetGame();startGame();overlay.innerHTML='';});
+}
 
-  // expose some debug (optional)
-  window.GD = { resetGame, startRun };
+function showGameOver(finish){
+  overlay.style.pointerEvents='auto';
+  let html='<div class="menu">';
+  if(finish){html+='<h2>Finish!</h2><p>Level geschafft!</p>';}
+  else{html+='<h2>Game Over</h2><p>Ouch — getroffen!</p>';}
+  html+='<p>Score: '+score+'</p><button class="start" id="replay">Play Again</button></div>';
+  overlay.innerHTML=html;
+  document.getElementById('replay').addEventListener('click',()=>{resetGame(); startGame(); overlay.innerHTML='';});
+}
 
+showMenu();
 })();
 </script>
 </body>
