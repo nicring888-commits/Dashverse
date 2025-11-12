@@ -35,12 +35,21 @@ const bestEl = document.getElementById('best');
 let best = parseInt(localStorage.getItem('dashcore_best')||'0',10);
 bestEl.textContent = best;
 
-const G=1800, JUMP_V=-440, PLAYER_W=46, PLAYER_H=36, GROUND_H=86;
+// Easy mode “super chill”
+const G=1800, JUMP_V=-600, PLAYER_W=46, PLAYER_H=36, GROUND_H=86;
 let player={x:120,y:0,vy:0,onGround:true,w:PLAYER_W,h:PLAYER_H};
 let obstacles=[], camX=0, running=false, gameOver=false, score=0;
 let particles=[];
 
-const baseObstacles=[{x:600,w:48,h:68},{x:900,w:48,h:120},{x:1150,w:96,h:92},{x:1550,w:64,h:160},{x:2000,w:72,h:72},{x:2450,w:48,h:120},{x:2800,w:120,h:96},{x:3200,w:48,h:150},{x:3650,w:96,h:88},{x:4050,w:160,h:120}];
+// Hindernisse weiter auseinander
+const baseObstacles=[
+  {x:700,w:48,h:68},
+  {x:1200,w:48,h:120},
+  {x:1800,w:96,h:92},
+  {x:2500,w:64,h:160},
+  {x:3200,w:72,h:72},
+  {x:4000,w:48,h:120}
+];
 const finishX=4800;
 
 function buildLevel(){
@@ -88,7 +97,7 @@ function update(dt){
   player.vy += G*dt;
   player.y += player.vy*dt;
   if(player.y >= canvas.height-GROUND_H-player.h){player.y = canvas.height-GROUND_H-player.h;player.vy=0;player.onGround=true;}
-  const speed=320; camX += speed*dt; score=Math.floor(camX/6); scoreEl.textContent=score;
+  const speed=250; camX += speed*dt; score=Math.floor(camX/6); scoreEl.textContent=score;
   for(const o of obstacles){
     const ox=o.x-camX+player.x*0.2;
     const oy=canvas.height-GROUND_H-o.h;
@@ -114,7 +123,6 @@ function draw(){
     const ox=o.x-camX+player.x*0.2;
     const oy=groundY-o.h;
     if(ox>-200 && ox<canvas.width+200){
-      // Glow
       ctx.shadowBlur=12; ctx.shadowColor='#06b6d4';
       ctx.fillStyle='#06b6d4'; ctx.fillRect(ox,oy,o.w,o.h);
       ctx.shadowBlur=0;
